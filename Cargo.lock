@@ -20,13 +20,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "blackberry"
-version = "0.1.0"
-dependencies = [
- "stack-vec 0.1.0",
- "ttywrite 0.1.0",
- "volatile 0.1.0",
- "xmodem 0.1.0",
-]
+version = "0.1.1"
 
 [[package]]
 name = "clap"
@@ -113,7 +107,7 @@ dependencies = [
 
 [[package]]
 name = "stack-vec"
-version = "0.1.0"
+version = "0.1.1"
 
 [[package]]
 name = "strsim"
@@ -183,12 +177,12 @@ dependencies = [
 
 [[package]]
 name = "ttywrite"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "serial 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "structopt 0.1.7 (registry+https://github.com/rust-lang/crates.io-index)",
  "structopt-derive 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)",
- "xmodem 0.1.0",
+ "xmodem 0.1.1",
 ]
 
 [[package]]
@@ -208,7 +202,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "volatile"
-version = "0.1.0"
+version = "0.1.1"
 
 [[package]]
 name = "winapi"
@@ -231,7 +225,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "xmodem"
-version = "0.1.0"
+version = "0.1.1"
 
 [metadata]
 "checksum ansi_term 0.10.2 (registry+https://github.com/rust-lang/crates.io-index)" = "6b3568b48b7cefa6b8ce125f9bb4989e52fbcc29ebea88df04cc7c5f12f70455"

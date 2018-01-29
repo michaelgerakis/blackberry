@@ -1,15 +1,12 @@
 [package]
 name = "blackberry"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Michael Gerakis <mgerakis@bu.com>"]
 license = "MIT"
 description = " A collection of libraries and binaries for a Raspberry Pi OS ."
+homepage = "https://github.com/michaelgerakis/blackberry"
 repository = "https://github.com/michaelgerakis/blackberry"
-
-[dependencies]
-stack-vec = { path = "stack-vec" }
-xmodem = { path = "xmodem" }
-volatile = { path = "volatile" }
-ttywrite = { path = "ttywrite" }
+readme = "README.md"
 
 [workspace]
+members = ["stack-vec", "xmodem", "volatile", "ttywrite"]
