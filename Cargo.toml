@@ -2,6 +2,9 @@
 name = "blackberry"
 version = "0.1.0"
 authors = ["Michael Gerakis <mgerakis@bu.com>"]
+license = "MIT"
+description = " A collection of libraries and binaries for a Raspberry Pi OS ."
+repository = "https://github.com/michaelgerakis/blackberry"
 
 [dependencies]
 stack-vec = { path = "stack-vec" }
