@@ -1,0 +1,6 @@
+[package]
+name = "volatile"
+version = "0.1.0"
+authors = ["Michael Gerakis <mgerakis@bu.com>", "Sergio Benitez <sb@sergio.bz>"]
+
+[dependencies]

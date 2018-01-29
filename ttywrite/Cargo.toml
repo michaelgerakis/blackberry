@@ -1,0 +1,10 @@
+[package]
+name = "ttywrite"
+version = "0.1.0"
+authors = ["Michael Gerakis <mgerakis@bu.com>", "Sergio Benitez <sb@sergio.bz>"]
+
+[dependencies]
+structopt = "0.1.0"
+structopt-derive = "0.1.0"
+serial = "0.4"
+xmodem = { path = "../xmodem" }

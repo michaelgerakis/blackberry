@@ -1,0 +1,6 @@
+/target/
+
+# Backup files created by rustfmt
+**/*.rs.bk
+
+.DS_Store
