@@ -3,36 +3,30 @@
 #![no_std]
 
 extern crate compiler_builtins;
+extern crate volatile;
 
 pub mod lang_items;
+pub mod timer;
+pub mod gpio;
+mod common;
 
-const GPIO_BASE: usize = 0x3F000000 + 0x200000;
-
-const GPIO_FSEL1: *mut u32 = (GPIO_BASE + 0x04) as *mut u32;
-const GPIO_SET0: *mut u32 = (GPIO_BASE + 0x1C) as *mut u32;
-const GPIO_CLR0: *mut u32 = (GPIO_BASE + 0x28) as *mut u32;
-
-#[inline(never)]
-fn spin_sleep_ms(ms: usize) {
-    for _ in 0..(ms * 600) {
-        unsafe {
-            asm!("nop" :::: "volatile");
-        }
-    }
-}
-
-unsafe fn set_addr_to_bit(addr: *mut u32, bit: u32, offset: u32) {
-    addr.write_volatile(bit << offset);
-}
+use gpio::GPIO;
+use timer::spin_sleep_ms;
 
 #[no_mangle]
-pub unsafe extern "C" fn kmain() {
-    set_addr_to_bit(GPIO_FSEL1, 0b1, 18);
+pub extern "C" fn kmain() {
+    GPIO::cleanup();
+
+    let mut pins = [GPIO::new(5).into_output(), GPIO::new(19).into_output()];
+
+    spin_sleep_ms(3000);
 
     loop {
-        set_addr_to_bit(GPIO_SET0, 0b1, 16);
-        spin_sleep_ms(1000);
-        set_addr_to_bit(GPIO_CLR0, 0b1, 16);
-        spin_sleep_ms(1000);
+        pins[0].set();
+        pins[1].clear();
+        spin_sleep_ms(300);
+        pins[0].clear();
+        pins[1].set();
+        spin_sleep_ms(300);
     }
 }

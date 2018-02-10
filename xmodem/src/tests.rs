@@ -1,6 +1,6 @@
 use super::*;
-use std::sync::mpsc::{channel, Receiver, Sender};
 use std::io::Cursor;
+use std::sync::mpsc::{channel, Receiver, Sender};
 
 struct Pipe(Sender<u8>, Receiver<u8>, Vec<u8>);
 
@@ -35,9 +35,7 @@ impl io::Write for Pipe {
         Ok(buf.len())
     }
 
-    fn flush(&mut self) -> io::Result<()> {
-        Ok(())
-    }
+    fn flush(&mut self) -> io::Result<()> { Ok(()) }
 }
 
 #[test]
@@ -48,7 +46,8 @@ fn test_loop() {
     }
 
     let (tx, rx) = pipe();
-    let tx_thread = std::thread::spawn(move || Xmodem::transmit(&input[..], rx));
+    let tx_thread =
+        std::thread::spawn(move || Xmodem::transmit(&input[..], rx));
     let rx_thread = std::thread::spawn(move || {
         let mut output = [0u8; 384];
         Xmodem::receive(tx, &mut output[..]).map(|_| output)
@@ -66,10 +65,18 @@ fn test_loop() {
 fn test_transmit_reported_bytes() {
     let (input, mut output) = ([0u8; 50], [0u8; 128]);
     let (tx, rx) = pipe();
-    let tx_thread = std::thread::spawn(move || Xmodem::transmit(&input[..], rx));
-    let rx_thread = std::thread::spawn(move || Xmodem::receive(tx, &mut output[..]));
-    assert_eq!(tx_thread.join().expect("tx join okay").expect("tx okay"), 50);
-    assert_eq!(rx_thread.join().expect("rx join okay").expect("rx okay"), 128);
+    let tx_thread =
+        std::thread::spawn(move || Xmodem::transmit(&input[..], rx));
+    let rx_thread =
+        std::thread::spawn(move || Xmodem::receive(tx, &mut output[..]));
+    assert_eq!(
+        tx_thread.join().expect("tx join okay").expect("tx okay"),
+        50
+    );
+    assert_eq!(
+        rx_thread.join().expect("rx join okay").expect("rx okay"),
+        128
+    );
 }
 
 #[test]

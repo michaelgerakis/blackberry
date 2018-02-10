@@ -22,7 +22,9 @@ KERNEL := $(BUILD_DIR)/$(BINARY_NAME)
 # Search this path if the file is not in the current directory
 VPATH := ext
 
-.PHONY: all clean install
+RUST_DEPS := $(wildcard src/*.rs) $(wildcard volatile/src/*.rs)
+
+.PHONY: all clean install format deps check
 
 all: $(KERNEL).bin $(KERNEL).hex
 
@@ -41,7 +43,7 @@ $(KERNEL).elf: $(BUILD_DIR)/boot.o $(RUST_DEBUG_LIB)
 $(BUILD_DIR):
 	@mkdir $@
 
-$(RUST_DEBUG_LIB):
+$(RUST_DEBUG_LIB): $(RUST_DEPS)
 	@echo 'Building kernel.'
 	@$(XARGO) build --target $(TARGET)
 
@@ -49,8 +51,22 @@ $(BUILD_DIR)/%.o: %.S | $(BUILD_DIR)
 	@echo 'Creating boot.S.'
 	@$(CC) $(CCFLAGS) -c $< -o $@
 
-install:
+check: $(RUST_DEPS)
+	@$(XARGO) check --target $(TARGET)
+
+deps:
 	rustup component add rustfmt-preview rust-src
+
+install: $(KERNEL).bin
+	@echo 'Installing disk onto usb drive...'
+	@if [ -d "/Volumes/CANAKIT" ]; then mv $< /Volumes/CANAKIT/kernel8.img; fi
+	@echo 'Unmounting usb drive...'
+# Sleep for a second to make sure everything is written
+	@sleep 1
+	@diskutil unmount CANAKIT
+
+format: $(RUST_DEPS)
+	@rustfmt $?
 
 clean:
 	@echo 'Removing remnants...'

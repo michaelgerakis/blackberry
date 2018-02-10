@@ -1,5 +1,20 @@
 # Change Log
 
+## 0.1.3 (2018-02-10)
+### Added
+* Volatile library based off of a similar library by Sergio Benitez
+  * Provides interfaces around raw pointers for performing volatile operations
+* Added gpio and timer modules in the kernel for interfacing with the gpio and timer peripherals
+* Added a .rustfmt.toml file to configure the formatting
+
+### Changed
+* Changed what happens in the main kernel loop. GPIO pins 5 and 19 blink repeatedly.
+* Added various rules to the Makefile to make tasks easier
+  * ```make install``` - Installs the binary in the usb and unmounts it
+  * ```make check``` - Checks the rust code without compiling it
+  * ```make format``` - Formats all rust dependencies (currently **_src/*.rs_** and **_volatile/src/*.rs_**)
+  * ```make deps``` - Install all dependencies necessary for the project
+
 ## 0.1.2 (2018-02-03)
 ### Added
 * Added a simple kernel build in the root workspace

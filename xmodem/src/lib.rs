@@ -1,5 +1,5 @@
-use std::num::Wrapping;
 use std::io;
+use std::num::Wrapping;
 
 #[cfg(test)]
 mod tests;
@@ -14,8 +14,8 @@ const NAK: u8 = 0x15;
 const CAN: u8 = 0x18;
 
 pub struct Xmodem<R> {
-    packet: u8,
-    inner: R,
+    packet:  u8,
+    inner:   R,
     started: bool,
 }
 
@@ -44,7 +44,9 @@ impl Xmodem<()> {
 
             for _ in 0..10 {
                 match transmitter.write_packet(&packet) {
-                    Err(ref e) if e.kind() == io::ErrorKind::Interrupted => continue,
+                    Err(ref e) if e.kind() == io::ErrorKind::Interrupted => {
+                        continue
+                    }
                     Err(e) => return Err(e),
                     Ok(_) => {
                         written += n;
@@ -53,7 +55,10 @@ impl Xmodem<()> {
                 }
             }
 
-            return Err(io::Error::new(io::ErrorKind::BrokenPipe, "bad transmit"));
+            return Err(io::Error::new(
+                io::ErrorKind::BrokenPipe,
+                "bad transmit",
+            ));
         }
     }
 
@@ -70,7 +75,9 @@ impl Xmodem<()> {
         'next_packet: loop {
             for _ in 0..10 {
                 match receiver.read_packet(&mut packet) {
-                    Err(ref e) if e.kind() == io::ErrorKind::Interrupted => continue,
+                    Err(ref e) if e.kind() == io::ErrorKind::Interrupted => {
+                        continue
+                    }
                     Err(e) => return Err(e),
                     Ok(0) => break 'next_packet,
                     Ok(n) => {
@@ -81,7 +88,10 @@ impl Xmodem<()> {
                 }
             }
 
-            return Err(io::Error::new(io::ErrorKind::BrokenPipe, "bad receive"));
+            return Err(io::Error::new(
+                io::ErrorKind::BrokenPipe,
+                "bad receive",
+            ));
         }
 
         Ok(received)
@@ -94,9 +104,9 @@ impl<T: io::Read + io::Write> Xmodem<T> {
     /// (downloading) and sending (uploading).
     pub fn new(inner: T) -> Self {
         Xmodem {
-            packet: 1,
+            packet:  1,
             started: false,
-            inner: inner,
+            inner:   inner,
         }
     }
 
@@ -138,7 +148,11 @@ impl<T: io::Read + io::Write> Xmodem<T> {
     /// Returns an error if reading from the inner stream fails, if the read
     /// byte was not `byte`, or if writing the `CAN` byte failed on byte
     /// mismatch.
-    fn expect_byte_or_cancel(&mut self, byte: u8, msg: &'static str) -> io::Result<u8> {
+    fn expect_byte_or_cancel(
+        &mut self,
+        byte: u8,
+        msg: &'static str,
+    ) -> io::Result<u8> {
         let read = self.read_byte()?;
         if read == byte {
             Ok(read)
@@ -156,7 +170,11 @@ impl<T: io::Read + io::Write> Xmodem<T> {
     ///
     /// Returns an error if reading from the inner stream fails or if the read
     /// byte was not `byte`.
-    fn expect_byte(&mut self, byte: u8, expected: &'static str) -> io::Result<u8> {
+    fn expect_byte(
+        &mut self,
+        byte: u8,
+        expected: &'static str,
+    ) -> io::Result<u8> {
         let read = self.read_byte()?;
         if read == byte {
             Ok(read)
@@ -351,7 +369,5 @@ impl<T: io::Read + io::Write> Xmodem<T> {
     ///
     /// It is considered an error if not all bytes could be written due to I/O
     /// errors or EOF being reached.
-    pub fn flush(&mut self) -> io::Result<()> {
-        self.inner.flush()
-    }
+    pub fn flush(&mut self) -> io::Result<()> { self.inner.flush() }
 }
