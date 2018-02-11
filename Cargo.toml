@@ -9,7 +9,7 @@ repository = "https://github.com/michaelgerakis/blackberry"
 readme = "README.md"
 
 [workspace]
-members = ["stack-vec", "xmodem", "volatile", "ttywrite"]
+members = ["stack-vec", "xmodem", "volatile", "ttywrite", "std"]
 
 [lib]
 path = "src/kmain.rs"

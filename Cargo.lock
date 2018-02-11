@@ -119,6 +119,10 @@ name = "stack-vec"
 version = "0.1.1"
 
 [[package]]
+name = "std"
+version = "0.1.0"
+
+[[package]]
 name = "strsim"
 version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
