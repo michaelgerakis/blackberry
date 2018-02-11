@@ -6,27 +6,29 @@ extern crate compiler_builtins;
 extern crate volatile;
 
 pub mod lang_items;
+pub mod common;
 pub mod timer;
 pub mod gpio;
-mod common;
+pub mod uart;
 
 use gpio::GPIO;
-use timer::spin_sleep_ms;
+use uart::UART;
 
 #[no_mangle]
 pub extern "C" fn kmain() {
     GPIO::cleanup();
 
-    let mut pins = [GPIO::new(5).into_output(), GPIO::new(19).into_output()];
-
-    spin_sleep_ms(3000);
+    let mut mu = UART::new(270);
 
     loop {
-        pins[0].set();
-        pins[1].clear();
-        spin_sleep_ms(300);
-        pins[0].clear();
-        pins[1].set();
-        spin_sleep_ms(300);
+        mu.write_byte(b'>');
+        mu.write_byte(b' ');
+
+        let byte = mu.read_byte();
+
+        mu.write_byte(byte);
+
+        mu.write_byte(0x0d);
+        mu.write_byte(0x0a);
     }
 }
