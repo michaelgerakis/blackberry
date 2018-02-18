@@ -1,0 +1,8 @@
+[package]
+name = "pi"
+version = "0.1.0"
+authors = ["Michael Gerakis <mgerakis@bu.com>"]
+description = "Various interfaces to bind with the peripherals of the Raspberry Pi 3"
+
+[dependencies]
+volatile = { path = "../volatile" }

@@ -1,5 +1,5 @@
 SECTIONS {
-  . = 0x80000; /* Raspberry Pi Aarch64 (kernel8.img) load address */
+  . = 0x4000000; /* bootloader start; leave ~64MiB free */
 
   /* start of the binary */
   _start  = .;

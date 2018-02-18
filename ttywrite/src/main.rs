@@ -1,17 +1,19 @@
+#![feature(pointer_methods)]
+
 extern crate serial;
 extern crate structopt;
 #[macro_use]
 extern crate structopt_derive;
 extern crate xmodem;
 
-use std::io::Write;
+use std::io::{stdin, BufRead, BufReader};
 use std::path::PathBuf;
 use std::time::Duration;
 
 use serial::core::{BaudRate, CharSize, FlowControl, SerialDevice,
                    SerialPortSettings, StopBits};
 use structopt::StructOpt;
-use xmodem::Xmodem;
+use xmodem::{Progress, Xmodem};
 
 mod parsers;
 
@@ -31,7 +33,7 @@ struct Opt {
                 help = "Set baud rate", default_value = "115200")]
     baud_rate: BaudRate,
 
-    #[structopt(short = "t", long = "timeout",
+    #[structopt(short = "t", long = "timeout", parse(try_from_str),
                 help = "Set timeout in seconds", default_value = "10")]
     timeout: u64,
 
@@ -60,20 +62,75 @@ struct Opt {
 
 fn main() {
     use std::fs::File;
-    use std::io::{self, BufRead, BufReader};
 
     let opt = Opt::from_args();
     let mut serial =
         serial::open(&opt.tty_path).expect("path points to invalid TTY");
 
-    let mut buf = String::new();
-    let stdin = io::stdin()
-        .read_line(&mut buf)
-        .expect("Please input a value.");
+    let mut settings =
+        serial.read_settings().expect("Failed to load settings.");
+    settings
+        .set_baud_rate(opt.baud_rate)
+        .expect("Invalid baud rate.");
+    settings.set_char_size(opt.char_width);
+    settings.set_flow_control(opt.flow_control);
+    settings.set_stop_bits(opt.stop_bits);
+    serial
+        .write_settings(&settings)
+        .expect("Failed to apply serial settings");
 
-    println!("{}", stdin);
-    println!("{}", buf);
+    serial
+        .set_timeout(Duration::from_secs(opt.timeout))
+        .expect("Invalid timeout");
 
-    serial.write(&buf.into_bytes());
-    serial.flush();
+    let sent_raw = match opt.input {
+        Some(file) => send_to_serial(
+            BufReader::new(File::open(file).expect("File open failed")),
+            &mut serial,
+            opt.raw,
+        ),
+        None => send_to_serial(BufReader::new(stdin()), &mut serial, opt.raw),
+    };
+
+    match sent_raw {
+        Ok(n) => println!("wrote {} bytes to input", n),
+        Err(e) => println!("error: {:?}", e),
+    }
+}
+
+fn send_to_serial<I: BufRead>(
+    mut input: I,
+    serial: &mut serial::SerialPort,
+    raw: bool,
+) -> Result<usize, std::io::Error> {
+    match raw {
+        true => serial.write(input.fill_buf()?),
+        false => Xmodem::transmit_with_progress(input, serial, progress_fn),
+    }
+}
+
+
+fn progress_fn(progress: Progress) {
+    use std::io::Write;
+    static mut LAST_PKT: u8 = 0;
+
+    match progress {
+        Progress::Started => {
+            println!("Transmission started:");
+        }
+        Progress::Waiting => println!("Waiting for initial NAK"),
+        Progress::Packet(p) => {
+            if unsafe { p == LAST_PKT } {
+                print!("@");
+            } else {
+                unsafe { LAST_PKT = p };
+                print!("#")
+            }
+            std::io::stdout().flush().unwrap();
+        }
+        Progress::Terminated(p) => {
+            println!("");
+            println!("| wrote {} packets", p);
+        }
+    }
 }

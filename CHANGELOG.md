@@ -1,5 +1,11 @@
 # Change Log
 
+## 0.1.4 (2018-02-18)
+### Added
+* Added interface for UART pins on the raspberry
+* Added a global static console object that mimics a console by writing to the UART
+* Implemented a shell on top of the console singleton
+
 ## 0.1.3 (2018-02-10)
 ### Added
 * Volatile library based off of a similar library by Sergio Benitez

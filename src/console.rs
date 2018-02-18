@@ -2,7 +2,7 @@ use std::fmt;
 use std::io;
 
 use mutex::Mutex;
-use uart::UART;
+use pi::uart::UART;
 
 /// A global singleton allowing read/write access to the console.
 pub struct Console {
@@ -15,32 +15,47 @@ impl Console {
 
     /// Initializes the console if it's not already initialized.
     #[inline]
-    fn initialize(&mut self) { unimplemented!() }
+    fn initialize(&mut self) {
+        match self.inner {
+            None => self.inner = Some(UART::new(270)),
+            _ => {}
+        }
+    }
 
     /// Returns a mutable borrow to the inner `UART`, initializing it as
     /// needed.
-    fn inner(&mut self) -> &mut UART { unimplemented!() }
+    fn inner(&mut self) -> &mut UART {
+        self.initialize();
+
+        self.inner.as_mut().unwrap()
+    }
 
     /// Reads a byte from the UART device, blocking until a byte is
     /// available.
-    pub fn read_byte(&mut self) -> u8 { unimplemented!() }
+    pub fn read_byte(&mut self) -> u8 { self.inner().read_byte() }
 
     /// Writes the byte `byte` to the UART device.
-    pub fn write_byte(&mut self, byte: u8) { unimplemented!() }
+    pub fn write_byte(&mut self, byte: u8) { self.inner().write_byte(byte); }
 }
 
 impl io::Read for Console {
-    fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> { unimplemented!() }
+    fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
+        self.inner().read(buf)
+    }
 }
 
 impl io::Write for Console {
-    fn write(&mut self, buf: &[u8]) -> io::Result<usize> { unimplemented!() }
+    fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
+        self.inner().write(buf)
+    }
 
     fn flush(&mut self) -> io::Result<()> { Ok(()) }
 }
 
 impl fmt::Write for Console {
-    fn write_str(&mut self, s: &str) -> fmt::Result { unimplemented!() }
+    fn write_str(&mut self, s: &str) -> fmt::Result {
+        self.inner().write_str(s)
+    }
 }
 
 /// Global `Console` singleton.

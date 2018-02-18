@@ -45,7 +45,7 @@ for i in {1..10}; do
   echo -e "${KBLU}Running test ${i}/10.${KNRM}"
 
   input=$(rand_string)
-  echo -n "${input}" | ../target/debug/ttywrite -r input
+  echo -n "${input}" | ./target/debug/ttywrite -r input
   output=$(cat output)
   if [[ "${output}" != "${input}" ]]; then
     echo -e "${KRED}ERROR: input and output differ${KNRM}" >&2

@@ -11,7 +11,7 @@ struct TimerRegisters {
     chi:   ReadVolatile<u32>,
 }
 
-fn current_time() -> u64 {
+pub fn current_time() -> u64 {
     let registers = unsafe { &*(TIMER_BASE as *const TimerRegisters) };
     (registers.chi.read() as u64) << 32 | registers.clo.read() as u64
 }
