@@ -1,10 +1,10 @@
-use common::IO_BASE;
 use core::marker::PhantomData;
+
+use common::IO_BASE;
 use volatile::{ReadVolatile, Reserved, Volatile, WriteVolatile};
 use volatile::prelude::*;
 
-const GPIO_BASE: usize = IO_BASE + 0x200000;
-
+/// An alternative GPIO function.
 #[repr(u8)]
 pub enum Function {
     Input = 0b000,
@@ -18,90 +18,139 @@ pub enum Function {
 }
 
 #[repr(C)]
-struct GPIORegisters {
-    fsel:  [Volatile<u32>; 6],
-    _res0: Reserved<u32>,
-    set:   [WriteVolatile<u32>; 2],
-    _res1: Reserved<u32>,
-    clr:   [WriteVolatile<u32>; 2],
-    _res2: Reserved<u32>,
-    lvl:   [ReadVolatile<u32>; 2],
+#[allow(non_snake_case)]
+struct Registers {
+    FSEL:   [Volatile<u32>; 6],
+    __r0:   Reserved<u32>,
+    SET:    [WriteVolatile<u32>; 2],
+    __r1:   Reserved<u32>,
+    CLR:    [WriteVolatile<u32>; 2],
+    __r2:   Reserved<u32>,
+    LEV:    [ReadVolatile<u32>; 2],
+    __r3:   Reserved<u32>,
+    EDS:    [Volatile<u32>; 2],
+    __r4:   Reserved<u32>,
+    REN:    [Volatile<u32>; 2],
+    __r5:   Reserved<u32>,
+    FEN:    [Volatile<u32>; 2],
+    __r6:   Reserved<u32>,
+    HEN:    [Volatile<u32>; 2],
+    __r7:   Reserved<u32>,
+    LEN:    [Volatile<u32>; 2],
+    __r8:   Reserved<u32>,
+    AREN:   [Volatile<u32>; 2],
+    __r9:   Reserved<u32>,
+    AFEN:   [Volatile<u32>; 2],
+    __r10:  Reserved<u32>,
+    PUD:    Volatile<u32>,
+    PUDCLK: [Volatile<u32>; 2],
 }
 
 pub enum Uninitialized {}
-pub enum Output {}
 pub enum Input {}
-pub enum Alternate {}
+pub enum Output {}
+pub enum Alt {}
 
+/// A GPIO pin in state `State`.
+///
+/// The `State` generic always corresponds to an uninstantiatable type that is
+/// use solely to mark and track the state of a given GPIO pin. A `Gpio`
+/// structure starts in the `Uninitialized` state and must be transitions into
+/// one of `Input`, `Output`, or `Alt` via the `into_input`, `into_output`, and
+/// `into_alt` methods before it can be used.
 pub struct GPIO<State> {
-    state:     PhantomData<State>,
     pin:       u8,
-    registers: &'static mut GPIORegisters,
+    registers: &'static mut Registers,
+    _state:    PhantomData<State>,
+}
+
+/// The base address of the `GPIO` registers.
+const GPIO_BASE: usize = IO_BASE + 0x200000;
+
+impl<T> GPIO<T> {
+    /// Transitions `self` to state `S`, consuming `self` and returning a new
+    /// `Gpio` instance in state `S`. This method should _never_ be exposed to
+    /// the public!
+    #[inline(always)]
+    fn transition<S>(self) -> GPIO<S> {
+        GPIO {
+            pin:       self.pin,
+            registers: self.registers,
+            _state:    PhantomData,
+        }
+    }
 }
 
 impl GPIO<Uninitialized> {
-    pub fn cleanup() {
-        for i in 0..54 {
-            GPIO::new(i).into_output().clear();
-        }
-    }
-
+    /// Returns a new `GPIO` structure for pin number `pin`.
+    ///
+    /// # Panics
+    ///
+    /// Panics if `pin` > `53`.
     pub fn new(pin: u8) -> GPIO<Uninitialized> {
         if pin > 53 {
             panic!("Gpio::new(): pin {} exceeds maximum of 53", pin);
         }
 
         GPIO {
-            pin,
-            state: PhantomData,
-            registers: unsafe { &mut *(GPIO_BASE as *mut GPIORegisters) },
+            registers: unsafe { &mut *(GPIO_BASE as *mut Registers) },
+            pin:       pin,
+            _state:    PhantomData,
         }
     }
 
-    #[inline(always)]
+    /// Enables the alternative function `function` for `self`. Consumes self
+    /// and returns a `Gpio` structure in the `Alt` state.
+    pub fn into_alt(self, function: Function) -> GPIO<Alt> {
+        let reg = self.pin as usize / 10;
+        let bit = (self.pin as usize % 10) * 3;
+
+        let val = self.registers.FSEL[reg].read() & !(0b111 << bit);
+        let val = val | (function as u32) << bit;
+        self.registers.FSEL[reg].write(val);
+
+        self.transition()
+    }
+
+    /// Sets this pin to be an _output_ pin. Consumes self and returns a `Gpio`
+    /// structure in the `Output` state.
     pub fn into_output(self) -> GPIO<Output> {
-        return self.transition(Function::Output);
+        self.into_alt(Function::Output).transition()
     }
 
-    #[inline(always)]
+    /// Sets this pin to be an _input_ pin. Consumes self and returns a `Gpio`
+    /// structure in the `Input` state.
     pub fn into_input(self) -> GPIO<Input> {
-        return self.transition(Function::Input);
-    }
-
-    #[inline(always)]
-    pub fn into_alt(self, alt: Function) -> GPIO<Alternate> {
-        return self.transition(alt);
+        self.into_alt(Function::Input).transition()
     }
 }
 
-impl<T> GPIO<T> {
-    fn transition<R>(self, function: Function) -> GPIO<R> {
-        let offset = (self.pin % 10) * 3;
-        let reg = self.pin / 10;
-
-        self.registers.fsel[reg as usize].and_mask(!((0b111 as u32) << offset));
-        self.registers.fsel[reg as usize].or_mask((function as u32) << offset);
-
-        GPIO {
-            pin:       self.pin,
-            state:     PhantomData,
-            registers: self.registers,
-        }
-    }
-}
-
-impl<Output> GPIO<Output> {
+impl GPIO<Output> {
+    /// Sets (turns on) the pin.
     pub fn set(&mut self) {
-        let reg = self.pin / 32;
-        let offset = self.pin % 32;
-
-        self.registers.set[reg as usize].write(0b1 << offset);
+        let reg = self.pin as usize / 32;
+        let bit = self.pin as usize % 32;
+        self.registers.SET[reg].write(1 << bit)
     }
 
+    /// Clears (turns off) the pin.
     pub fn clear(&mut self) {
-        let reg = self.pin / 32;
-        let offset = self.pin % 32;
+        let reg = self.pin as usize / 32;
+        let bit = self.pin as usize % 32;
+        self.registers.CLR[reg].write(1 << bit)
+    }
+}
 
-        self.registers.clr[reg as usize].write(0b1 << offset);
+impl GPIO<Input> {
+    /// Reads the pin's value. Returns `true` if the level is high and `false`
+    /// if the level is low.
+    pub fn level(&mut self) -> bool {
+        let reg = self.pin as usize / 32;
+        let bit = self.pin as usize % 32;
+        let val = self.registers.LEV[reg].read() & !(1 << bit);
+        match val {
+            0 => false,
+            _ => true,
+        }
     }
 }

@@ -1,5 +1,17 @@
 # Change Log
 
+## 0.2.0 (2018-02-19)
+### Added
+* Created a bootloader binary that listens for XMODEM communication, reads the given binary, and executes it.
+
+### Changed
+* Added xmodem abilities to ttywrite
+* ```make install``` - Now runs ttywrite and sends the binary to the tty device
+
+### Fixed
+* xmodem library did not seem to work correctly, used reference code to fix it.
+* read timeout in uart was set to nanoseconds instead of milliseconds
+
 ## 0.1.4 (2018-02-18)
 ### Added
 * Added interface for UART pins on the raspberry

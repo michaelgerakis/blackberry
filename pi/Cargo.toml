@@ -6,3 +6,6 @@ description = "Various interfaces to bind with the peripherals of the Raspberry 
 
 [dependencies]
 volatile = { path = "../volatile" }
+
+[features]
+std = []

@@ -25,7 +25,7 @@ struct Registers {
     scratch: Volatile<u32>,
     cntl:    Volatile<u32>,     // various extra features
     stat:    ReadVolatile<u32>, // extra internal status information
-    baud:    Volatile<u32>,     // direct access to the 16-bit baudrate counter
+    baud:    Volatile<u16>,     // direct access to the 16-bit baudrate counter
 }
 
 pub struct UART {
@@ -54,7 +54,7 @@ impl UART {
         // Set data size to 8 bits
         registers.lcr.write(0b11);
         // Set baud rate to the divisor given
-        registers.baud.write(baud_rate as u32);
+        registers.baud.write(baud_rate);
         // Enable tx and rx
         registers.cntl.or_mask(0b11);
 
@@ -65,7 +65,7 @@ impl UART {
     }
 
     pub fn set_read_timeout(&mut self, milliseconds: u32) {
-        self.timeout = Some(milliseconds as u64);
+        self.timeout = Some(milliseconds as u64 * 1000);
     }
 
     pub fn write_byte(&mut self, byte: u8) {
@@ -83,7 +83,7 @@ impl UART {
             Some(ms) => {
                 let start_time = current_time();
 
-                while current_time() > start_time + ms {
+                while current_time() <= start_time + ms {
                     if self.has_byte() {
                         return Ok(());
                     }
@@ -133,15 +133,17 @@ impl io::Write for UART {
 
 impl io::Read for UART {
     fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
-        let mut read = 0;
+        match self.wait_for_byte() {
+            Ok(()) => {
+                let mut read = 0;
+                while self.has_byte() && read < buf.len() {
+                    buf[read] = self.read_byte();
+                    read += 1;
+                }
 
-        if self.wait_for_byte() == Ok(()) {
-            while self.has_byte() && read < buf.len() {
-                buf[read] = self.read_byte();
-                read += 1;
+                Ok(read)
             }
+            Err(()) => Err(io::Error::new(io::ErrorKind::TimedOut, "Timeout")),
         }
-
-        Ok(read)
     }
 }

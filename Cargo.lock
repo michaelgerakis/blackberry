@@ -8,14 +8,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "bootloader"
-version = "0.1.0"
-dependencies = [
- "pi 0.1.0",
- "xmodem 0.1.1",
-]
-
-[[package]]
 name = "pi"
 version = "0.1.0"
 dependencies = [

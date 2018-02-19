@@ -19,21 +19,9 @@ pub mod mutex;
 pub mod console;
 pub mod shell;
 
-use pi::gpio::GPIO;
-use pi::uart::UART;
 use shell::shell;
 
 #[no_mangle]
 pub extern "C" fn kmain() {
-    GPIO::cleanup();
-
-    let mut uart = UART::new(270);
-
-    while !uart.has_byte() {
-        uart.write_byte(b'>');
-        uart.write_byte(b' ');
-        uart.write_byte(b'\r');
-    }
-
     shell(">");
 }

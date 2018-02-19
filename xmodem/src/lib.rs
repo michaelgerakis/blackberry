@@ -1,5 +1,3 @@
-#![feature(pointer_methods)]
-
 use std::io;
 
 #[cfg(test)]
@@ -16,6 +14,7 @@ const EOT: u8 = 0x04;
 const ACK: u8 = 0x06;
 const NAK: u8 = 0x15;
 const CAN: u8 = 0x18;
+const BUF_LEN: usize = 128;
 
 /// Implementation of the XMODEM protocol.
 pub struct Xmodem<R> {
@@ -82,9 +81,10 @@ impl Xmodem<()> {
                 }
             }
 
-            return Err(
-                io::Error::new(io::ErrorKind::BrokenPipe, "bad transmit"),
-            );
+            return Err(io::Error::new(
+                io::ErrorKind::BrokenPipe,
+                "bad transmit",
+            ));
         }
     }
 
@@ -132,9 +132,10 @@ impl Xmodem<()> {
                 }
             }
 
-            return Err(
-                io::Error::new(io::ErrorKind::BrokenPipe, "bad receive"),
-            );
+            return Err(io::Error::new(
+                io::ErrorKind::BrokenPipe,
+                "bad receive",
+            ));
         }
 
         Ok(received)
@@ -246,7 +247,7 @@ impl<T: io::Read + io::Write> Xmodem<T> {
             b if b == byte => Ok(byte),
             CAN => Err(io::Error::new(
                 io::ErrorKind::ConnectionAborted,
-                "recieved CAN",
+                "received CAN",
             )),
             _ => Err(io::Error::new(io::ErrorKind::InvalidData, expected)),
         }
@@ -276,14 +277,14 @@ impl<T: io::Read + io::Write> Xmodem<T> {
     ///
     /// An error of kind `UnexpectedEof` is returned if `buf.len() < 128`.
     pub fn read_packet(&mut self, buf: &mut [u8]) -> io::Result<usize> {
-        if buf.len() < 128 {
+        if buf.len() < BUF_LEN {
             return Err(io::Error::new(
                 io::ErrorKind::UnexpectedEof,
                 "Unexpected eof",
             ));
         }
 
-        if self.started == false {
+        if !self.started {
             self.write_byte(NAK)?;
             self.started = true;
             (self.progress)(Progress::Started);
@@ -292,16 +293,12 @@ impl<T: io::Read + io::Write> Xmodem<T> {
         match self.read_byte(true)? {
             EOT => {
                 (self.progress)(Progress::Terminated(self.packet));
-
                 self.write_byte(NAK)?;
                 self.expect_byte(EOT, "Expected a second EOT")?;
                 self.write_byte(ACK)?;
-                self.started = false;
                 Ok(0)
             }
             SOH => {
-                (self.progress)(Progress::Packet(self.packet));
-
                 let packet = self.packet;
                 let complement = 255 - packet;
 
@@ -315,6 +312,7 @@ impl<T: io::Read + io::Write> Xmodem<T> {
                 )?;
 
                 for i in 0..128 {
+                    // CAN is allowed here
                     let byte = self.read_byte(false)?;
                     buf[i] = byte;
                 }
@@ -325,8 +323,9 @@ impl<T: io::Read + io::Write> Xmodem<T> {
                 match self.expect_byte(checksum, "checksum mismatch") {
                     Ok(_) => {
                         self.write_byte(ACK)?;
-                        self.packet = ((self.packet as u16 + 1) % 256) as u8;
-                        Ok(128)
+                        self.packet = self.packet.wrapping_add(1);
+                        (self.progress)(Progress::Packet(self.packet));
+                        Ok(BUF_LEN)
                     }
                     _ => {
                         self.write_byte(NAK)?;
@@ -339,7 +338,7 @@ impl<T: io::Read + io::Write> Xmodem<T> {
             }
             _ => Err(io::Error::new(
                 io::ErrorKind::InvalidData,
-                "Expected first byte to be EOT or SOH",
+                "Neither SOH nor EOT recieved",
             )),
         }
     }
@@ -375,7 +374,7 @@ impl<T: io::Read + io::Write> Xmodem<T> {
     ///
     /// An error of kind `Interrupted` is returned if a packet checksum fails.
     pub fn write_packet(&mut self, buf: &[u8]) -> io::Result<usize> {
-        if buf.len() != 0 && buf.len() < 128 {
+        if buf.len() != 0 && buf.len() < BUF_LEN {
             return Err(io::Error::new(
                 io::ErrorKind::UnexpectedEof,
                 "Unexpected eof",
@@ -391,47 +390,43 @@ impl<T: io::Read + io::Write> Xmodem<T> {
 
         if buf.len() == 0 {
             (self.progress)(Progress::Terminated(self.packet));
-
             self.write_byte(EOT)?;
             self.expect_byte(NAK, "Expected NAK after first EOT")?;
             self.write_byte(EOT)?;
             self.expect_byte(ACK, "Expected ACK after second EOT")?;
-            self.started = false;
-            return Ok(0);
-        }
+            Ok(0)
+        } else {
+            let packet = self.packet;
+            let complement = 255 - self.packet;
 
-        (self.progress)(Progress::Packet(self.packet));
+            let checksum =
+                (buf.iter().fold(0u16, |a, &b| a + b as u16) % 256) as u8;
 
-        self.write_byte(SOH)?;
+            self.write_byte(SOH)?;
+            self.write_byte(packet)?;
+            self.write_byte(complement)?;
 
-        let packet = self.packet;
-        let complement = 255 - self.packet;
-
-        self.write_byte(packet)?;
-        self.write_byte(complement)?;
-
-        for byte in buf.into_iter() {
-            self.write_byte(*byte)?;
-        }
-
-        let checksum =
-            (buf.iter().fold(0u16, |a, &b| a + b as u16) % 256) as u8;
-
-        self.write_byte(checksum)?;
-
-        match self.read_byte(true)? {
-            ACK => {
-                self.packet = ((self.packet as u16 + 1) % 256) as u8;
-                Ok(128)
+            for byte in buf.into_iter() {
+                self.write_byte(*byte)?;
             }
-            NAK => Err(io::Error::new(
-                io::ErrorKind::Interrupted,
-                "checksum mismatch",
-            )),
-            _ => Err(io::Error::new(
-                io::ErrorKind::InvalidData,
-                "Expected ACK or NAK after packet transmission",
-            )),
+
+            self.write_byte(checksum)?;
+
+            match self.read_byte(true)? {
+                ACK => {
+                    (self.progress)(Progress::Packet(self.packet));
+                    self.packet = self.packet.wrapping_add(1);
+                    Ok(128)
+                }
+                NAK => Err(io::Error::new(
+                    io::ErrorKind::Interrupted,
+                    "checksum mismatch",
+                )),
+                _ => Err(io::Error::new(
+                    io::ErrorKind::InvalidData,
+                    "Expected ACK or NAK after packet transmission",
+                )),
+            }
         }
     }
 

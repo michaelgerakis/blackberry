@@ -3,6 +3,7 @@ core  = {}
 std_unicode = {}
 
 [dependencies.compiler_builtins]
+features = ["mem"]
 stage = 1
 
 [dependencies.std]

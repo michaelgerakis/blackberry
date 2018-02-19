@@ -9,7 +9,7 @@ repository = "https://github.com/michaelgerakis/blackberry"
 readme = "README.md"
 
 [workspace]
-members = ["stack-vec", "xmodem", "volatile", "std", "bootloader", "pi"]
+members = ["stack-vec", "xmodem", "volatile", "std", "pi"]
 
 [lib]
 path = "src/kmain.rs"
@@ -23,4 +23,4 @@ debug = true
 [dependencies]
 volatile = {path = "./volatile"}
 stack-vec = {path = "./stack-vec"}
-pi = { path = "./pi" }
+pi = { path = "./pi", features = ["std"] }

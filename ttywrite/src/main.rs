@@ -109,7 +109,6 @@ fn send_to_serial<I: BufRead>(
     }
 }
 
-
 fn progress_fn(progress: Progress) {
     use std::io::Write;
     static mut LAST_PKT: u8 = 0;

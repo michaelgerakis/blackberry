@@ -12,7 +12,6 @@ CCFLAGS := -Wall -O2 -nostdlib -nostartfiles -ffreestanding -pie -fpie
 LDFLAGS := --gc-sections -static -nostdlib -nostartfiles --no-dynamic-linker
 
 BINARY_NAME := blackberry
-BOOTLOADER_NAME := bootloader
 BUILD_DIR := build
 
 # Rust files are build into this directory
@@ -21,23 +20,18 @@ RUST_DEBUG_LIB := $(RUST_BUILD_DIR)/debug/lib$(BINARY_NAME).a
 RUST_RELEASE_LIB := $(RUST_BUILD_DIR)/release/lib$(BINARY_NAME).a
 
 KERNEL := $(BUILD_DIR)/$(BINARY_NAME)
-BOOTLOADER := $(BUILD_DIR)/$(BOOTLOADER_NAME)
 
 # Search this path if the file is not in the current directory
 VPATH := ext
 
 RUST_DEPS := $(wildcard src/*.rs) $(wildcard volatile/src/*.rs) $(wildcard xmodem/src/*.rs) $(wildcard pi/src/*.rs) $(wildcard ttywrite/src/*.rs)
 
-.PHONY: all clean install format deps check screen bootloader
+.PHONY: all clean install format deps check screen install
 
 all: $(KERNEL).bin $(KERNEL).hex
 
-bootloader: | $(BUILD_DIR)
-	@echo 'Creating bootloader...'
-	@$(XARGO) build --target $(TARGET) -p bootloader
-	@$(CC) $(CCFLAGS) -c ext/boot.S -o $(BUILD_DIR)/boot.o
-	@$(LD) $(LDFLAGS) -T ext/bootloader.ld -o $(BOOTLOADER).elf -O2 $(BUILD_DIR)/boot.o $(RUST_BUILD_DIR)/debug/lib$(BOOTLOADER_NAME).a
-	@$(OBJCOPY) $(BOOTLOADER).elf -O binary $(BOOTLOADER).bin
+install: $(KERNEL).bin
+	@$(MAKE) -C ttywrite
 
 $(KERNEL).bin: $(KERNEL).elf
 	@echo 'Creating binary output.'
@@ -67,14 +61,6 @@ check: $(RUST_DEPS)
 
 deps:
 	rustup component add rustfmt-preview rust-src
-
-install: $(KERNEL).bin
-	@echo 'Installing disk onto usb drive...'
-	@if [ -d "/Volumes/CANAKIT" ]; then rm $(ISO_DRIVE); mv $< $(ISO_DRIVE); fi
-	@echo 'Unmounting usb drive...'
-# Sleep for a second to make sure everything is written
-	@sleep 1
-	@diskutil unmount CANAKIT
 
 screen:
 	@screen $(DEVICE) 115200
