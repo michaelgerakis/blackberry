@@ -16,57 +16,38 @@
 
 // Re-exported core operators
 #[stable(feature = "rust1", since = "1.0.0")]
-#[doc(no_inline)]
-pub use marker::{Copy, Send, Sized, Sync};
+#[doc(no_inline)] pub use marker::{Copy, Send, Sized, Sync};
 #[stable(feature = "rust1", since = "1.0.0")]
-#[doc(no_inline)]
-pub use ops::{Drop, Fn, FnMut, FnOnce};
+#[doc(no_inline)] pub use ops::{Drop, Fn, FnMut, FnOnce};
 
 // Re-exported functions
 #[stable(feature = "rust1", since = "1.0.0")]
-#[doc(no_inline)]
-pub use mem::drop;
+#[doc(no_inline)] pub use mem::drop;
 
 // Re-exported types and traits
-// #[stable(feature = "rust1", since = "1.0.0")]
-// #[doc(no_inline)] pub use boxed::Box;
-// #[stable(feature = "rust1", since = "1.0.0")]
-// #[doc(no_inline)] pub use borrow::ToOwned;
 #[stable(feature = "rust1", since = "1.0.0")]
-#[doc(no_inline)]
-pub use clone::Clone;
+#[doc(no_inline)] pub use boxed::Box;
 #[stable(feature = "rust1", since = "1.0.0")]
-#[doc(no_inline)]
-pub use cmp::{Eq, Ord, PartialEq, PartialOrd};
+#[doc(no_inline)] pub use borrow::ToOwned;
 #[stable(feature = "rust1", since = "1.0.0")]
-#[doc(no_inline)]
-pub use convert::{AsMut, AsRef, From, Into};
+#[doc(no_inline)] pub use clone::Clone;
 #[stable(feature = "rust1", since = "1.0.0")]
-#[doc(no_inline)]
-pub use default::Default;
+#[doc(no_inline)] pub use cmp::{PartialEq, PartialOrd, Eq, Ord};
 #[stable(feature = "rust1", since = "1.0.0")]
-#[doc(no_inline)]
-pub use iter::{DoubleEndedIterator, ExactSizeIterator};
+#[doc(no_inline)] pub use convert::{AsRef, AsMut, Into, From};
 #[stable(feature = "rust1", since = "1.0.0")]
-#[doc(no_inline)]
-pub use iter::{Extend, IntoIterator, Iterator};
+#[doc(no_inline)] pub use default::Default;
 #[stable(feature = "rust1", since = "1.0.0")]
-#[doc(no_inline)]
-pub use option::Option::{self, None, Some};
+#[doc(no_inline)] pub use iter::{Iterator, Extend, IntoIterator};
 #[stable(feature = "rust1", since = "1.0.0")]
-#[doc(no_inline)]
-pub use result::Result::{self, Err, Ok};
-// #[stable(feature = "rust1", since = "1.0.0")]
-// #[doc(no_inline)] pub use slice::SliceConcatExt;
-// #[stable(feature = "rust1", since = "1.0.0")]
-// #[doc(no_inline)] pub use string::{String, ToString};
-// #[stable(feature = "rust1", since = "1.0.0")]
-// #[doc(no_inline)] pub use vec::Vec;
-
-// TODO: These are additions!
+#[doc(no_inline)] pub use iter::{DoubleEndedIterator, ExactSizeIterator};
 #[stable(feature = "rust1", since = "1.0.0")]
-pub use core::slice::SliceExt;
+#[doc(no_inline)] pub use option::Option::{self, Some, None};
 #[stable(feature = "rust1", since = "1.0.0")]
-pub use core::str::StrExt;
-#[stable(feature = "addition", since = "1.0.0")]
-pub use std_unicode::str::*;
+#[doc(no_inline)] pub use result::Result::{self, Ok, Err};
+#[stable(feature = "rust1", since = "1.0.0")]
+#[doc(no_inline)] pub use slice::SliceConcatExt;
+#[stable(feature = "rust1", since = "1.0.0")]
+#[doc(no_inline)] pub use string::{String, ToString};
+#[stable(feature = "rust1", since = "1.0.0")]
+#[doc(no_inline)] pub use vec::Vec;

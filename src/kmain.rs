@@ -22,6 +22,4 @@ pub mod shell;
 use shell::shell;
 
 #[no_mangle]
-pub extern "C" fn kmain() {
-    shell(">");
-}
+pub extern "C" fn kmain() { shell(">"); }
