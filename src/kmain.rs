@@ -19,7 +19,14 @@ pub mod mutex;
 pub mod console;
 pub mod shell;
 
-use shell::shell;
+use console::kprintln;
+use pi::atags::Atags;
+use pi::timer::spin_sleep_ms;
 
 #[no_mangle]
-pub extern "C" fn kmain() { shell(">"); }
+pub extern "C" fn kmain() {
+    spin_sleep_ms(2000);
+    for val in Atags::get() {
+        kprintln!("{:?}", val);
+    }
+}

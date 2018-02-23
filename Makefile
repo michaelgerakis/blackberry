@@ -24,7 +24,7 @@ KERNEL := $(BUILD_DIR)/$(BINARY_NAME)
 # Search this path if the file is not in the current directory
 VPATH := ext
 
-RUST_DEPS := $(wildcard src/*.rs) $(wildcard volatile/src/*.rs) $(wildcard xmodem/src/*.rs) $(wildcard pi/src/*.rs) $(wildcard ttywrite/src/*.rs)
+RUST_DEPS := $(wildcard src/*.rs) $(wildcard volatile/src/*.rs) $(wildcard xmodem/src/*.rs) $(wildcard pi/src/**/*.rs) $(wildcard ttywrite/src/*.rs)
 
 .PHONY: all clean install format deps check screen install
 
@@ -32,6 +32,7 @@ all: $(KERNEL).bin $(KERNEL).hex
 
 install: $(KERNEL).bin
 	@$(MAKE) -C ttywrite
+	@$(MAKE) screen
 
 $(KERNEL).bin: $(KERNEL).elf
 	@echo 'Creating binary output.'

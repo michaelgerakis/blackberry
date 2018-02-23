@@ -16,12 +16,32 @@ pub extern "C" fn panic_fmt(
     line: u32,
     col: u32,
 ) -> ! {
+    kprintln!("");
+    kprintln!("           (            ");
+    kprintln!("      (     )    )      ");
+    kprintln!("       )   (    (       ");
+    kprintln!("      (          `      ");
+    kprintln!("  .-\"\"^\"\"\"^\"\"^\"\"\"^\"\"-.  ");
+    kprintln!("(//\\\\//\\\\//\\\\//\\\\//\\\\//)");
+    kprintln!(" ~\\^^^^^^^^^^^^^^^^^^/~ ");
+    kprintln!("   `================`   ");
+    kprintln!("");
+    kprintln!("   The pi is overdone.");
+    kprintln!("");
+    kprintln!("--------- PANIC --------");
+    kprintln!("");
+    kprintln!("");
     kprintln!("FILE: {}", file);
     kprintln!("LINE: {}", line);
     kprintln!("COL: {}", col);
 
+    kprintln!("");
+
     kprintln!("{}", fmt);
-    loop {}
+
+    loop {
+        unsafe { asm!("wfe") }
+    }
 }
 
 #[lang = "eh_personality"]

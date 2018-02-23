@@ -1,5 +1,14 @@
 # Change Log
 
+## Unreleased
+### Changed
+* Use compiler-builtins mem feature in favor of custom mem operations in lang_items.
+* Use new firmware recieved from the official raspberry firmware [repository](https://github.com/raspberrypi/firmware).
+  * Addition of fixup.dat correctly uses all 1GB of RAM
+
+### Added
+* Interface for atags structure located at 0x100.
+
 ## 0.2.0 (2018-02-19)
 ### Added
 * Created a bootloader binary that listens for XMODEM communication, reads the given binary, and executes it.
