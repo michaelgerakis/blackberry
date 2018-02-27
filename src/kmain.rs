@@ -25,8 +25,14 @@ use pi::timer::spin_sleep_ms;
 
 #[no_mangle]
 pub extern "C" fn kmain() {
-    spin_sleep_ms(2000);
     for val in Atags::get() {
         kprintln!("{:?}", val);
     }
+}
+
+#[no_mangle]
+pub extern "C" fn mem_init(binary_end: usize) {
+    spin_sleep_ms(2000);
+
+    kprintln!("The binary end is {:x}", binary_end);
 }

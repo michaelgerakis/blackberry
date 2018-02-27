@@ -17,13 +17,10 @@ SECTIONS {
     *(.data .data.* .gnu.linkonce.d*)
   }
 
-  .bss (NOLOAD) : {
-    . = ALIGN(32);
+  .bss : {
     __bss_start = .;
     *(.bss .bss.*)
     *(COMMON)
-    . = ALIGN(8);
-    __bss_end = .;
   }
 
   /* end of the binary */

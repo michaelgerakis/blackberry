@@ -5,6 +5,7 @@
 * Use compiler-builtins mem feature in favor of custom mem operations in lang_items.
 * Use new firmware recieved from the official raspberry firmware [repository](https://github.com/raspberrypi/firmware).
   * Addition of fixup.dat correctly uses all 1GB of RAM
+* Switch execution level from 2 to 1 on init.
 
 ### Added
 * Interface for atags structure located at 0x100.
